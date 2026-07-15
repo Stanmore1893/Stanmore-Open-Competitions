@@ -170,6 +170,24 @@ input:focus,textarea:focus{outline:none;border-color:rgba(212,160,23,.6);backgro
 .pill-toggle.yes{background:rgba(76,217,138,.15);color:#4cd98a;border-color:rgba(76,217,138,.4);}
 .pill-toggle.no{background:rgba(255,144,128,.12);color:#ff9080;border-color:rgba(255,144,128,.35);}
 .empty-note{text-align:center;color:rgba(255,255,255,.4);font-size:.85rem;padding:30px 10px;}
+.soon-wrap{max-width:520px;margin:60px auto 0;padding:0 20px;text-align:center;}
+.soon-badge{display:inline-flex;align-items:center;gap:7px;border-radius:20px;padding:6px 14px;font-size:.63rem;letter-spacing:.16em;text-transform:uppercase;font-weight:700;margin-bottom:22px;}
+.soon-wrap.gold .soon-badge{background:rgba(212,160,23,.14);border:1px solid rgba(212,160,23,.4);color:#f0c040;}
+.soon-wrap.emerald .soon-badge{background:rgba(76,217,138,.12);border:1px solid rgba(76,217,138,.4);color:#4cd98a;}
+.soon-title{font-family:'Playfair Display',serif;font-size:2.1rem;font-weight:800;color:#fff;line-height:1.15;margin-bottom:10px;}
+.soon-wrap.gold .soon-title em{color:#f0c040;font-style:italic;}
+.soon-wrap.emerald .soon-title em{color:#4cd98a;font-style:italic;}
+.soon-sub{font-size:.86rem;color:rgba(255,255,255,.55);margin-bottom:34px;}
+.soon-clock{display:flex;justify-content:center;gap:12px;margin-bottom:30px;}
+.soon-unit{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:16px 10px;min-width:70px;position:relative;overflow:hidden;}
+.soon-wrap.gold .soon-unit{border-color:rgba(212,160,23,.25);}
+.soon-wrap.emerald .soon-unit{border-color:rgba(76,217,138,.25);}
+.soon-unit .num{font-family:'DM Mono',monospace;font-size:1.7rem;font-weight:500;color:#fff;line-height:1;}
+.soon-wrap.gold .soon-unit .num{color:#f0c040;}
+.soon-wrap.emerald .soon-unit .num{color:#4cd98a;}
+.soon-unit .lbl{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:5px;}
+.soon-date{font-family:'DM Mono',monospace;font-size:.82rem;color:rgba(255,255,255,.5);margin-bottom:30px;}
+.soon-notify{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:16px 18px;font-size:.82rem;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:24px;}
 .page-footer{text-align:center;padding:24px 16px 32px;}
 .page-footer .credit{display:inline-flex;align-items:center;gap:8px;}
 .page-footer .credit .ln{width:24px;height:1.5px;background:linear-gradient(to right,transparent,rgba(212,160,23,.6));}
@@ -192,8 +210,8 @@ input:focus,textarea:focus{outline:none;border-color:rgba(212,160,23,.6);backgro
   <div class="nav-items">
     <div class="nav-sec">Open Competitions</div>
     <button class="nav-item active" onclick="showPage('landing');closeNav();"><span class="nav-icon">⛳</span><span class="nav-lbl">All Competitions<span class="nav-desc">Choose &amp; enter</span></span></button>
-    <button class="nav-item" onclick="showPage('seniors');closeNav();"><span class="nav-icon">🏌️</span><span class="nav-lbl">Seniors Open<span class="nav-desc">Entry form</span></span></button>
-    <button class="nav-item" onclick="showPage('junior');closeNav();"><span class="nav-icon">🏆</span><span class="nav-lbl">Junior Open<span class="nav-desc">Entry form</span></span></button>
+    <button class="nav-item" onclick="goToCompetition('seniors');closeNav();"><span class="nav-icon">🏌️</span><span class="nav-lbl">Seniors Open<span class="nav-desc">Entry form</span></span></button>
+    <button class="nav-item" onclick="goToCompetition('junior');closeNav();"><span class="nav-icon">🏆</span><span class="nav-lbl">Junior Open<span class="nav-desc">Entry form</span></span></button>
     <div class="nav-div"></div>
     <div class="nav-sec">Management</div>
     <button class="nav-item" onclick="showPage('admin');closeNav();"><span class="nav-icon">🔐</span><span class="nav-lbl">Admin Panel<span class="nav-desc">Manage entries</span></span></button>
@@ -328,6 +346,10 @@ input:focus,textarea:focus{outline:none;border-color:rgba(212,160,23,.6);backgro
   </div>
 </div>
 
+<div id="page-soon" class="hidden form-page">
+  <div class="soon-wrap" id="soon-content"></div>
+</div>
+
 <div id="page-admin" class="hidden form-page">
   <div id="admin-gate" class="admin-gate">
     <div class="ic">🔐</div>
@@ -376,7 +398,7 @@ function daysUntil(iso){
 
 function renderCompList(){
   document.getElementById('comp-list').innerHTML = COMPETITIONS.map(c=>`
-    <button class="poster-card ${c.tone} ${c.entriesOpen?'':'closed'}" onclick="${c.entriesOpen ? `showPage('${c.id}')` : `showToast('Entries for the ${c.name} aren\\'t open yet')`}">
+    <button class="poster-card ${c.tone} ${c.entriesOpen?'':'closed'}" onclick="goToCompetition('${c.id}')">
       <div class="poster-glow"></div>
       <div class="poster-top">
         <div class="poster-badges">
@@ -421,12 +443,67 @@ function openNav(){document.getElementById('sgcNavDrawer').classList.add('open')
 function closeNav(){document.getElementById('sgcNavDrawer').classList.remove('open');document.getElementById('sgcNavOverlay').classList.remove('open');}
 
 function showPage(name){
-  ['landing','seniors','junior','admin'].forEach(p=>{
+  ['landing','seniors','junior','soon','admin'].forEach(p=>{
     document.getElementById('page-'+p).classList.toggle('hidden', p!==name);
   });
   document.getElementById('backBtn').classList.toggle('hidden', name==='landing');
   window.scrollTo(0,0);
   if(name==='admin') initAdmin();
+}
+
+let soonInterval = null;
+
+function goToCompetition(id){
+  const c = COMPETITIONS.find(x=>x.id===id);
+  if(!c) return;
+  if(c.entriesOpen){
+    showPage(id);
+  }else{
+    showComingSoon(c);
+  }
+}
+
+function showComingSoon(c){
+  if(soonInterval) clearInterval(soonInterval);
+  const wrap = document.getElementById('soon-content');
+  wrap.className = 'soon-wrap ' + c.tone;
+  wrap.innerHTML = `
+    <div class="soon-badge">🔒 Entries Not Yet Open</div>
+    <div class="soon-title">Stanmore <em>${c.name}</em></div>
+    <div class="soon-sub">Entries open soon — be ready to secure your place.</div>
+    <div class="soon-clock" id="soon-clock">
+      <div class="soon-unit"><div class="num" id="soon-d">--</div><div class="lbl">Days</div></div>
+      <div class="soon-unit"><div class="num" id="soon-h">--</div><div class="lbl">Hours</div></div>
+      <div class="soon-unit"><div class="num" id="soon-m">--</div><div class="lbl">Mins</div></div>
+      <div class="soon-unit"><div class="num" id="soon-s">--</div><div class="lbl">Secs</div></div>
+    </div>
+    <div class="soon-date">🏆 Competition day · ${c.dateLabel}</div>
+    <div class="soon-notify">Entry details and the sign-up form will be published here shortly. Check back closer to the date, or ask the club office when entries open.</div>
+    <button class="btn ghost" onclick="showPage('landing')">← Back to Competitions</button>
+  `;
+  showPage('soon');
+  tickSoonClock(c.dateISO);
+  soonInterval = setInterval(()=>tickSoonClock(c.dateISO), 1000);
+}
+
+function tickSoonClock(dateISO){
+  const diff = new Date(dateISO) - new Date();
+  if(diff <= 0){
+    document.getElementById('soon-d').textContent='0';
+    document.getElementById('soon-h').textContent='0';
+    document.getElementById('soon-m').textContent='0';
+    document.getElementById('soon-s').textContent='0';
+    if(soonInterval) clearInterval(soonInterval);
+    return;
+  }
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  document.getElementById('soon-d').textContent = d;
+  document.getElementById('soon-h').textContent = String(h).padStart(2,'0');
+  document.getElementById('soon-m').textContent = String(m).padStart(2,'0');
+  document.getElementById('soon-s').textContent = String(s).padStart(2,'0');
 }
 
 function checkAge(input, threshold, direction, errId, competitionISO){
