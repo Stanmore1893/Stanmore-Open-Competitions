@@ -109,6 +109,12 @@ html,body{min-height:100%;font-family:'Poppins',sans-serif;color:#fff;overflow-x
 .poster-card.gold .poster-cta-txt{color:#f0c040;}
 .poster-card.emerald .poster-cta-txt{color:#4cd98a;}
 .poster-cta-arrow{font-size:1.3rem;font-weight:300;}
+.poster-card.closed{opacity:.7;cursor:default;}
+.poster-card.closed:active{transform:none;}
+.poster-open.closed-badge{color:#ff9080;}
+.poster-open.closed-badge::before{content:'';}
+.poster-card.closed .poster-cta{background:rgba(255,255,255,.04);}
+.poster-card.closed .poster-cta-txt{color:rgba(255,255,255,.5) !important;}
 
 .form-page{max-width:560px;margin:0 auto;padding:0 14px 40px;}
 .hidden{display:none !important;}
@@ -164,6 +170,12 @@ input:focus,textarea:focus{outline:none;border-color:rgba(212,160,23,.6);backgro
 .pill-toggle.yes{background:rgba(76,217,138,.15);color:#4cd98a;border-color:rgba(76,217,138,.4);}
 .pill-toggle.no{background:rgba(255,144,128,.12);color:#ff9080;border-color:rgba(255,144,128,.35);}
 .empty-note{text-align:center;color:rgba(255,255,255,.4);font-size:.85rem;padding:30px 10px;}
+.page-footer{text-align:center;padding:24px 16px 32px;}
+.page-footer .credit{display:inline-flex;align-items:center;gap:8px;}
+.page-footer .credit .ln{width:24px;height:1.5px;background:linear-gradient(to right,transparent,rgba(212,160,23,.6));}
+.page-footer .credit .ln.r{background:linear-gradient(to left,transparent,rgba(212,160,23,.6));}
+.page-footer .credit span.txt{font-size:.78rem;color:rgba(212,160,23,.6);white-space:nowrap;}
+.page-footer .credit span.txt strong{color:#f0c040;font-weight:600;white-space:nowrap;}
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0f2347;border:1px solid #d4a017;color:#f0c040;padding:10px 20px;border-radius:20px;font-size:.82rem;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;z-index:600;white-space:nowrap;}
 </style>
 </head>
@@ -204,10 +216,17 @@ input:focus,textarea:focus{outline:none;border-color:rgba(212,160,23,.6);backgro
   </div></div>
   <div class="section-label"><span>Choose Your Championship</span><div class="ln"></div></div>
   <div class="poster-wrap" id="comp-list"></div>
+  <div class="page-footer">
+    <div class="credit">
+      <div class="ln"></div>
+      <span class="txt">Designed &amp; built by <strong>Alex Persaud &middot; PGA Professional</strong></span>
+      <div class="ln r"></div>
+    </div>
+  </div>
 </div>
 
 <div id="page-seniors" class="hidden form-page">
-  <div class="page-title"><span class="ic">🏌️</span><div><h2 style="font-family:'Playfair Display',serif;">Stanmore Seniors Open</h2><div class="sub">Entry Form · Age 50+ on day of play</div></div></div>
+  <div class="page-title"><span class="ic">🏌️</span><div><h2 style="font-family:'Playfair Display',serif;">Stanmore Seniors Open</h2><div class="sub">Entry Form · Age 50+ on Wed 19 May 2027</div></div></div>
   <form id="form-seniors" onsubmit="return submitEntry(event,'seniors')">
     <div class="card-body">
       <div class="fs-title">Golfer Details</div>
@@ -219,9 +238,9 @@ input:focus,textarea:focus{outline:none;border-color:rgba(212,160,23,.6);backgro
       </div>
       <div class="row2">
         <div><label class="req">Handicap Index</label><input type="number" step="0.1" name="handicap" required></div>
-        <div><label class="req">Date of Birth</label><input type="date" name="dob" required onchange="checkAge(this,50,'over','err-seniors')"></div>
+        <div><label class="req">Date of Birth</label><input type="date" name="dob" required onchange="checkAge(this,50,'over','err-seniors','2027-05-19')"></div>
       </div>
-      <div id="err-seniors" class="err-text hidden">⚠️ This competition is open to golfers aged 50 and over — please check the date.</div>
+      <div id="err-seniors" class="err-text hidden">⚠️ This competition is open to golfers who will be 50 or over on the day of play (Wed 19 May 2027) — please check the date entered.</div>
     </div>
     <div class="card-body">
       <div class="fs-title">Contact Details</div>
@@ -247,7 +266,7 @@ input:focus,textarea:focus{outline:none;border-color:rgba(212,160,23,.6);backgro
 </div>
 
 <div id="page-junior" class="hidden form-page">
-  <div class="page-title"><span class="ic">🏆</span><div><h2 style="font-family:'Playfair Display',serif;">Stanmore Junior Open</h2><div class="sub">Entry Form · Under 18 on day of play</div></div></div>
+  <div class="page-title"><span class="ic">🏆</span><div><h2 style="font-family:'Playfair Display',serif;">Stanmore Junior Open</h2><div class="sub">Entry Form · Under 18 on Fri 30 July 2027</div></div></div>
   <form id="form-junior" onsubmit="return submitEntry(event,'junior')">
     <div class="card-body">
       <div class="fs-title">Golfer Details</div>
@@ -259,9 +278,9 @@ input:focus,textarea:focus{outline:none;border-color:rgba(212,160,23,.6);backgro
       </div>
       <div class="row2">
         <div><label class="req">Handicap Index</label><input type="number" step="0.1" name="handicap" required></div>
-        <div><label class="req">Date of Birth</label><input type="date" name="dob" required onchange="checkAge(this,18,'under','err-junior')"></div>
+        <div><label class="req">Date of Birth</label><input type="date" name="dob" required onchange="checkAge(this,18,'under','err-junior','2027-07-30')"></div>
       </div>
-      <div id="err-junior" class="err-text hidden">⚠️ This competition is open to golfers under 18 — please check the date.</div>
+      <div id="err-junior" class="err-text hidden">⚠️ This competition is open to golfers who will be under 18 on the day of play (Fri 30 July 2027) — please check the date entered.</div>
     </div>
     <div class="card-body">
       <div class="fs-title">Golfer Contact <span style="color:rgba(255,255,255,.4);font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></div>
@@ -328,9 +347,9 @@ input:focus,textarea:focus{outline:none;border-color:rgba(212,160,23,.6);backgro
 const DIET_CHOICES = ["None","Vegetarian","Vegan","Gluten-free","Allergy — see notes"];
 const COMPETITIONS = [
   { id:'seniors', name:'Seniors Open', tone:'gold', eyebrow:'Est. Tradition',
-    dateISO:'2026-09-12', dateLabel:'Sat 12 Sept 2026', elig:'50+', fee:'£35' },
+    dateISO:'2027-05-19', dateLabel:'Wed 19 May 2027', elig:'50+', fee:'£35', entriesOpen:false },
   { id:'junior', name:'Junior Open', tone:'emerald', eyebrow:'Future Stars',
-    dateISO:'2026-09-20', dateLabel:'Sun 20 Sept 2026', elig:'U18', fee:'£10' }
+    dateISO:'2027-07-30', dateLabel:'Fri 30 July 2027', elig:'U18', fee:'£10', entriesOpen:false }
 ];
 
 function daysUntil(iso){
@@ -341,12 +360,14 @@ function daysUntil(iso){
 
 function renderCompList(){
   document.getElementById('comp-list').innerHTML = COMPETITIONS.map(c=>`
-    <button class="poster-card ${c.tone}" onclick="showPage('${c.id}')">
+    <button class="poster-card ${c.tone} ${c.entriesOpen?'':'closed'}" onclick="${c.entriesOpen ? `showPage('${c.id}')` : `showToast('Entries for the ${c.name} aren\\'t open yet')`}">
       <div class="poster-glow"></div>
       <div class="poster-top">
         <div class="poster-badges">
           <span class="poster-tag">${c.eyebrow}</span>
-          <span class="poster-open"><span class="dot"></span>Entries Open</span>
+          ${c.entriesOpen
+            ? `<span class="poster-open"><span class="dot"></span>Entries Open</span>`
+            : `<span class="poster-open closed-badge">Entries Closed</span>`}
         </div>
         <div class="poster-title">Stanmore <em>${c.name}</em></div>
         <div class="poster-tagline">${c.dateLabel}</div>
@@ -357,8 +378,8 @@ function renderCompList(){
         <div class="poster-stat"><div class="lbl">Countdown</div><div class="val">${daysUntil(c.dateISO)}</div></div>
       </div>
       <div class="poster-cta">
-        <span class="poster-cta-txt">Enter This Championship</span>
-        <span class="poster-cta-arrow">›</span>
+        <span class="poster-cta-txt">${c.entriesOpen ? 'Enter This Championship' : 'Opening Soon'}</span>
+        <span class="poster-cta-arrow">${c.entriesOpen ? '›' : '🔒'}</span>
       </div>
     </button>
   `).join('');
@@ -392,12 +413,12 @@ function showPage(name){
   if(name==='admin') initAdmin();
 }
 
-function checkAge(input, threshold, direction, errId){
+function checkAge(input, threshold, direction, errId, competitionISO){
   const dob = new Date(input.value);
-  const today = new Date();
-  let age = today.getFullYear()-dob.getFullYear();
-  const m = today.getMonth()-dob.getMonth();
-  if(m<0||(m===0&&today.getDate()<dob.getDate())) age--;
+  const refDate = competitionISO ? new Date(competitionISO) : new Date();
+  let age = refDate.getFullYear()-dob.getFullYear();
+  const m = refDate.getMonth()-dob.getMonth();
+  if(m<0||(m===0&&refDate.getDate()<dob.getDate())) age--;
   const ok = direction==='over' ? age>=threshold : age<threshold;
   document.getElementById(errId).classList.toggle('hidden', ok || !input.value);
   return ok;
