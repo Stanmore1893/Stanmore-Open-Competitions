@@ -178,13 +178,22 @@ input:focus,textarea:focus{outline:none;border-color:rgba(212,160,23,.6);backgro
 .tab-switch{display:flex;gap:8px;overflow-x:auto;padding:0 4px 14px;}
 .tab-btn{flex-shrink:0;font-size:.76rem;padding:8px 14px;border-radius:20px;border:1.5px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:rgba(255,255,255,.7);cursor:pointer;font-family:'Poppins',sans-serif;}
 .tab-btn.active{background:rgba(212,160,23,.25);color:#f0c040;border-color:rgba(212,160,23,.6);}
-.entry-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:14px 15px;margin-bottom:10px;}
-.entry-card .name{font-weight:700;font-size:.98rem;color:#fff;}
-.entry-card .badge{font-size:.62rem;text-transform:uppercase;letter-spacing:.06em;padding:3px 9px;border-radius:10px;font-weight:700;}
-.badge.seniors{background:rgba(100,180,255,.2);color:#7ec8ff;}
-.badge.junior{background:rgba(100,220,140,.2);color:#4cd98a;}
-.entry-card .meta-line{font-size:.76rem;color:rgba(255,255,255,.55);margin-top:6px;font-family:'DM Mono',monospace;}
-.entry-card .pills{display:flex;gap:8px;margin-top:10px;}
+#page-admin.form-page{max-width:1200px;}
+.admin-table-wrap{overflow-x:auto;border:1px solid rgba(255,255,255,.09);border-radius:14px;background:rgba(255,255,255,.02);}
+table.admin-table{width:100%;border-collapse:collapse;font-size:.78rem;white-space:nowrap;}
+table.admin-table thead th{position:sticky;top:0;background:#0f2347;color:rgba(212,160,23,.85);text-transform:uppercase;letter-spacing:.05em;font-size:.63rem;font-weight:700;padding:10px 12px;text-align:left;border-bottom:1px solid rgba(212,160,23,.3);white-space:nowrap;}
+table.admin-table tbody td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.85);vertical-align:middle;}
+table.admin-table tbody tr:nth-child(even){background:rgba(255,255,255,.02);}
+table.admin-table tbody tr:hover{background:rgba(212,160,23,.06);}
+table.admin-table .name-cell{font-weight:600;color:#fff;}
+table.admin-table .mono{font-family:'DM Mono',monospace;font-size:.75rem;color:rgba(255,255,255,.6);}
+.table-badge{font-size:.6rem;text-transform:uppercase;letter-spacing:.05em;padding:3px 8px;border-radius:8px;font-weight:700;}
+.table-badge.seniors{background:rgba(100,180,255,.2);color:#7ec8ff;}
+.table-badge.junior{background:rgba(100,220,140,.2);color:#4cd98a;}
+.table-toggle{display:inline-block;text-align:center;font-size:.68rem;font-weight:700;padding:5px 10px;border-radius:8px;cursor:pointer;border:1.5px solid;white-space:nowrap;}
+.table-toggle.yes{background:rgba(76,217,138,.15);color:#4cd98a;border-color:rgba(76,217,138,.4);}
+.table-toggle.no{background:rgba(255,144,128,.12);color:#ff9080;border-color:rgba(255,144,128,.35);}
+.entry-count{font-size:.76rem;color:rgba(255,255,255,.45);padding:0 4px 10px;}
 .pill-toggle{flex:1;text-align:center;font-size:.74rem;font-weight:700;padding:8px;border-radius:9px;cursor:pointer;border:1.5px solid;}
 .pill-toggle.yes{background:rgba(76,217,138,.15);color:#4cd98a;border-color:rgba(76,217,138,.4);}
 .pill-toggle.no{background:rgba(255,144,128,.12);color:#ff9080;border-color:rgba(255,144,128,.35);}
@@ -419,7 +428,6 @@ input:focus,textarea:focus{outline:none;border-color:rgba(212,160,23,.6);backgro
     <p>Enter the club admin PIN to view entries.</p>
     <input type="text" id="admin-pin" class="pin-input" placeholder="••••">
     <button class="btn gold" onclick="tryAdminLogin()">Enter</button>
-    <p class="helptext" id="admin-pin-hint" style="margin-top:14px;"></p>
   </div>
 
   <div id="admin-dashboard" class="hidden">
@@ -436,7 +444,18 @@ input:focus,textarea:focus{outline:none;border-color:rgba(212,160,23,.6);backgro
       <button class="tab-btn" onclick="switchAdminTab('junior',this)">Junior</button>
       <button class="tab-btn" onclick="switchAdminTab('unpaid',this)">Unpaid</button>
     </div>
-    <div id="admin-list"></div>
+    <div class="entry-count" id="entry-count"></div>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Comp</th><th>Name</th><th>Club</th><th>CDH</th><th>HI</th><th>Contact</th><th>DOB</th>
+            <th>Parent</th><th>Diet</th><th>Fee</th><th>Ref</th><th>Paid</th><th>Confirmed</th>
+          </tr>
+        </thead>
+        <tbody id="admin-list"></tbody>
+      </table>
+    </div>
     <p class="empty-note hidden" id="admin-empty">No entries yet.</p>
   </div>
 </div>
@@ -693,8 +712,6 @@ async function initAdmin(){
   document.getElementById('admin-gate').classList.remove('hidden');
   document.getElementById('admin-dashboard').classList.add('hidden');
   document.getElementById('admin-pin').value='';
-  const pin = await getAdminPin();
-  document.getElementById('admin-pin-hint').textContent = pin==='465394' ? 'Default PIN is 465394 — change it after logging in.' : '';
 }
 async function tryAdminLogin(){
   const entered = document.getElementById('admin-pin').value.trim();
@@ -723,29 +740,32 @@ function switchAdminTab(tab, btn){
 }
 
 async function renderAdminList(){
-  const container = document.getElementById('admin-list');
-  container.innerHTML = '<p class="empty-note">Loading…</p>';
+  const tbody = document.getElementById('admin-list');
+  tbody.innerHTML = `<tr><td colspan="13" class="empty-note">Loading…</td></tr>`;
   let entries = await getAllEntries();
   if(currentAdminTab==='seniors') entries=entries.filter(e=>e.competition==='seniors');
   if(currentAdminTab==='junior') entries=entries.filter(e=>e.competition==='junior');
   if(currentAdminTab==='unpaid') entries=entries.filter(e=>!e.paid);
 
+  document.getElementById('entry-count').textContent = entries.length + (entries.length===1 ? ' entry' : ' entries');
   document.getElementById('admin-empty').classList.toggle('hidden', entries.length>0);
-  container.innerHTML = entries.map(e=>`
-    <div class="entry-card">
-      <span class="badge ${e.competition}">${e.competitionName}</span>
-      <div class="name" style="margin-top:6px;">${escapeHtml(e.name||'')}</div>
-      <div class="meta-line">${escapeHtml(e.homeClub||'')} · CDH ${escapeHtml(e.cdh||'')} · HI ${escapeHtml(e.handicap||'')}</div>
-      ${e.feeTier ? `<div class="meta-line">💷 ${escapeHtml(e.feeTier)}</div>` : ''}
-      ${e.paymentRef ? `<div class="meta-line">🔖 Ref: ${escapeHtml(e.paymentRef)}</div>` : ''}
-      <div class="meta-line">${escapeHtml(e.email||'—')} · ${escapeHtml(e.phone||'—')} · DOB ${e.dob||'—'}</div>
-      ${e.parentEmail ? `<div class="meta-line">Parent: ${escapeHtml(e.parentEmail)} · ${escapeHtml(e.parentPhone||'')}</div>` : ''}
-      <div class="meta-line">${escapeHtml(e.diet||'')}${e.dietNotes ? ' — '+escapeHtml(e.dietNotes) : ''}</div>
-      <div class="pills">
-        <div class="pill-toggle ${e.paid?'yes':'no'}" onclick="togglePaid('${e.id}', ${e.paid})">${e.paid?'✓ Paid':'Unpaid'}</div>
-        <div class="pill-toggle ${e.confirmed?'yes':'no'}" onclick="toggleConfirmed('${e.id}', ${e.confirmed})">${e.confirmed?'✓ Confirmed':'Not confirmed'}</div>
-      </div>
-    </div>
+
+  tbody.innerHTML = entries.map(e=>`
+    <tr>
+      <td><span class="table-badge ${e.competition}">${e.competition==='seniors'?'Sen':'Jun'}</span></td>
+      <td class="name-cell">${escapeHtml(e.name||'')}</td>
+      <td>${escapeHtml(e.homeClub||'—')}</td>
+      <td class="mono">${escapeHtml(e.cdh||'—')}</td>
+      <td class="mono">${escapeHtml(e.handicap||'—')}</td>
+      <td class="mono">${escapeHtml(e.email||'—')}<br>${escapeHtml(e.phone||'—')}</td>
+      <td class="mono">${e.dob||'—'}</td>
+      <td class="mono">${e.parentEmail ? escapeHtml(e.parentEmail)+'<br>'+escapeHtml(e.parentPhone||'') : '—'}</td>
+      <td>${escapeHtml(e.diet||'—')}${e.dietNotes ? '<br><span class="mono">'+escapeHtml(e.dietNotes)+'</span>' : ''}</td>
+      <td>${escapeHtml(e.feeTier||'—')}</td>
+      <td class="mono">${escapeHtml(e.paymentRef||'—')}</td>
+      <td><span class="table-toggle ${e.paid?'yes':'no'}" onclick="togglePaid('${e.id}', ${e.paid})">${e.paid?'✓ Paid':'Unpaid'}</span></td>
+      <td><span class="table-toggle ${e.confirmed?'yes':'no'}" onclick="toggleConfirmed('${e.id}', ${e.confirmed})">${e.confirmed?'✓ Sent':'Not sent'}</span></td>
+    </tr>
   `).join('');
 }
 
