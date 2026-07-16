@@ -12,6 +12,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>Stanmore Golf Club · Open Competitions</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--navy:#1a3a6b;--navy-dk:#0f2347;--gold:#d4a017;--gold-lt:#f0c040;--grey:#8896a8;--green-lt:#4cd98a;--red:#ff9080;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -443,6 +444,10 @@ input:focus,textarea:focus{outline:none;border-color:rgba(212,160,23,.6);backgro
 <div id="toast"></div>
 
 <script>
+const SUPABASE_URL = 'https://sysnimzmrnengwhdaiga.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5c25pbXptcm5lbmd3aGRhaWdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NDcwNTMsImV4cCI6MjA5NTQyMzA1M30.Fa0Gs-5i1vSUfO9eL7Uf-mrkbX_9EC0vf39dASfB03o';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 const DIET_CHOICES = ["None","Vegetarian","Vegan","Gluten-free","Allergy — see notes"];
 const COMPETITIONS = [
   { id:'seniors', name:'Seniors Open', tone:'gold', eyebrow:'Est. Tradition',
@@ -622,24 +627,39 @@ function showToast(msg){
 async function submitEntry(evt, comp){
   evt.preventDefault();
   const form = evt.target;
-  const data = Object.fromEntries(new FormData(form).entries());
-  data.competition = comp;
-  data.competitionName = COMPETITIONS.find(c=>c.id===comp).name;
-  data.paymentRef = makeRef(comp==='seniors' ? 'SEN' : 'JUN', data.name);
-  data.enteredAt = new Date().toISOString();
-  data.paid = false;
-  data.confirmed = false;
-  data.id = comp+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+  const raw = Object.fromEntries(new FormData(form).entries());
+  const compMeta = COMPETITIONS.find(c=>c.id===comp);
+  const paymentRef = makeRef(comp==='seniors' ? 'SEN' : 'JUN', raw.name);
+  const id = comp+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+
+  const row = {
+    id: id,
+    competition: comp,
+    competition_name: compMeta.name,
+    name: raw.name || null,
+    home_club: raw.homeClub || null,
+    cdh: raw.cdh || null,
+    handicap: raw.handicap || null,
+    email: raw.email || null,
+    phone: raw.phone || null,
+    dob: raw.dob || null,
+    parent_email: raw.parentEmail || null,
+    parent_phone: raw.parentPhone || null,
+    diet: raw.diet || null,
+    diet_notes: raw.dietNotes || null,
+    fee_tier: raw.feeTier || null,
+    payment_ref: paymentRef,
+    paid: false,
+    confirmed: false
+  };
 
   try{
-    const list = await getEntryIndex();
-    list.push(data.id);
-    await window.storage.set('entry:'+data.id, JSON.stringify(data), true);
-    await window.storage.set('entry-index', JSON.stringify(list), true);
+    const { error } = await sb.from('open_comp_entries').insert(row);
+    if(error) throw error;
     form.classList.add('hidden');
     const successBox = document.getElementById('success-'+comp);
     const refNote = successBox.querySelector('.success-ref');
-    if(refNote) refNote.textContent = 'Your payment reference: ' + data.paymentRef;
+    if(refNote) refNote.textContent = 'Your payment reference: ' + paymentRef;
     successBox.classList.remove('hidden');
   }catch(err){
     showToast('Something went wrong — please try again');
@@ -648,30 +668,33 @@ async function submitEntry(evt, comp){
   return false;
 }
 
-async function getEntryIndex(){
-  try{ const res = await window.storage.get('entry-index', true); return res?JSON.parse(res.value):[]; }
-  catch(e){ return []; }
-}
 async function getAllEntries(){
-  const index = await getEntryIndex();
-  const entries=[];
-  for(const id of index){
-    try{ const res=await window.storage.get('entry:'+id, true); if(res) entries.push(JSON.parse(res.value)); }catch(e){}
-  }
-  entries.sort((a,b)=>new Date(b.enteredAt)-new Date(a.enteredAt));
-  return entries;
+  try{
+    const { data, error } = await sb.from('open_comp_entries').select('*').order('entered_at', {ascending:false});
+    if(error) throw error;
+    return (data||[]).map(e=>({
+      id:e.id, competition:e.competition, competitionName:e.competition_name, name:e.name,
+      homeClub:e.home_club, cdh:e.cdh, handicap:e.handicap, email:e.email, phone:e.phone, dob:e.dob,
+      parentEmail:e.parent_email, parentPhone:e.parent_phone, diet:e.diet, dietNotes:e.diet_notes,
+      feeTier:e.fee_tier, paymentRef:e.payment_ref, enteredAt:e.entered_at, paid:e.paid, confirmed:e.confirmed
+    }));
+  }catch(e){ console.error(e); return []; }
 }
 
 let currentAdminTab='all';
 async function getAdminPin(){
-  try{ const res=await window.storage.get('admin-pin', true); return res?res.value:'1926'; }catch(e){ return '1926'; }
+  try{
+    const { data, error } = await sb.from('open_comp_admin').select('pin').eq('id',1).single();
+    if(error) throw error;
+    return data ? data.pin : '465394';
+  }catch(e){ return '465394'; }
 }
 async function initAdmin(){
   document.getElementById('admin-gate').classList.remove('hidden');
   document.getElementById('admin-dashboard').classList.add('hidden');
   document.getElementById('admin-pin').value='';
   const pin = await getAdminPin();
-  document.getElementById('admin-pin-hint').textContent = pin==='1926' ? 'Default PIN is 1926 — change it after logging in.' : '';
+  document.getElementById('admin-pin-hint').textContent = pin==='465394' ? 'Default PIN is 465394 — change it after logging in.' : '';
 }
 async function tryAdminLogin(){
   const entered = document.getElementById('admin-pin').value.trim();
@@ -684,7 +707,13 @@ async function tryAdminLogin(){
 }
 async function setAdminPin(){
   const newPin = prompt('Enter a new admin PIN:');
-  if(newPin && newPin.trim()){ await window.storage.set('admin-pin', newPin.trim(), true); showToast('PIN updated'); }
+  if(newPin && newPin.trim()){
+    try{
+      const { error } = await sb.from('open_comp_admin').update({pin:newPin.trim()}).eq('id',1);
+      if(error) throw error;
+      showToast('PIN updated');
+    }catch(e){ showToast('Could not update PIN'); console.error(e); }
+  }
 }
 function switchAdminTab(tab, btn){
   currentAdminTab=tab;
@@ -722,13 +751,10 @@ async function renderAdminList(){
 
 async function toggleEntryField(id, field, currentVal){
   try{
-    const res = await window.storage.get('entry:'+id, true);
-    if(!res) return;
-    const entry = JSON.parse(res.value);
-    entry[field] = !currentVal;
-    await window.storage.set('entry:'+id, JSON.stringify(entry), true);
+    const { error } = await sb.from('open_comp_entries').update({[field]: !currentVal}).eq('id', id);
+    if(error) throw error;
     renderAdminList();
-  }catch(e){ console.error(e); }
+  }catch(e){ console.error(e); showToast('Could not update entry'); }
 }
 function togglePaid(id,val){ toggleEntryField(id,'paid',val); }
 function toggleConfirmed(id,val){ toggleEntryField(id,'confirmed',val); }
