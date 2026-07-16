@@ -141,6 +141,21 @@ input:focus,textarea:focus{outline:none;border-color:rgba(212,160,23,.6);backgro
 .diet-chip{font-size:.78rem;border:1.5px solid rgba(255,255,255,.14);padding:8px 14px;border-radius:20px;cursor:pointer;background:rgba(255,255,255,.05);color:rgba(255,255,255,.75);}
 .diet-chip input{display:none;}
 .diet-chip.active{background:rgba(212,160,23,.25);color:#f0c040;border-color:rgba(212,160,23,.6);}
+.fee-options{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+.fee-option{display:flex;align-items:center;justify-content:space-between;border:1.5px solid rgba(255,255,255,.14);border-radius:12px;padding:12px 14px;cursor:pointer;background:rgba(255,255,255,.03);}
+.fee-option.active{border-color:rgba(212,160,23,.6);background:rgba(212,160,23,.1);}
+.fee-option input{display:none;}
+.fee-option .lbl2{font-size:.86rem;font-weight:600;color:#fff;}
+.fee-option .amt{font-family:'DM Mono',monospace;font-size:.95rem;font-weight:500;color:#f0c040;}
+.pay-box{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:14px 16px;margin-top:4px;}
+.pay-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);}
+.pay-row:last-child{border-bottom:none;}
+.pay-row .k{font-size:.76rem;color:rgba(255,255,255,.5);}
+.pay-row .v{font-family:'DM Mono',monospace;font-size:.85rem;color:#fff;font-weight:500;}
+.pay-ref{background:rgba(212,160,23,.1);border:1.5px solid rgba(212,160,23,.4);border-radius:10px;padding:12px 14px;margin-top:12px;text-align:center;}
+.pay-ref .k{font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(212,160,23,.8);margin-bottom:4px;}
+.pay-ref .v{font-family:'DM Mono',monospace;font-size:1.02rem;color:#f0c040;font-weight:600;letter-spacing:.02em;}
+.pay-note{font-size:.72rem;color:rgba(255,255,255,.4);margin-top:10px;line-height:1.5;}
 .err-text{font-size:.76rem;color:#ff9080;margin-top:6px;display:flex;align-items:center;gap:5px;}
 .helptext{font-size:.72rem;color:rgba(255,255,255,.4);margin-top:5px;}
 .btn{width:100%;padding:14px;border-radius:12px;border:none;font-family:'Poppins',sans-serif;font-size:.92rem;font-weight:700;cursor:pointer;}
@@ -253,7 +268,7 @@ input:focus,textarea:focus{outline:none;border-color:rgba(212,160,23,.6);backgro
     <div class="card-body">
       <div class="fs-title">Golfer Details</div>
       <label class="req">Full Name</label>
-      <input type="text" name="name" required>
+      <input type="text" name="name" required oninput="updateRef('seniors', this.value)">
       <div class="row2">
         <div><label class="req">Home Club</label><input type="text" name="homeClub" required></div>
         <div><label class="req">CDH Number</label><input type="text" name="cdh" required></div>
@@ -263,6 +278,32 @@ input:focus,textarea:focus{outline:none;border-color:rgba(212,160,23,.6);backgro
         <div><label class="req">Date of Birth</label><input type="date" name="dob" required onchange="checkAge(this,50,'over','err-seniors','2027-05-19')"></div>
       </div>
       <div id="err-seniors" class="err-text hidden">⚠️ This competition is open to golfers who will be 50 or over on the day of play (Wed 19 May 2027) — please check the date entered.</div>
+    </div>
+    <div class="card-body">
+      <div class="fs-title">Entry Fee</div>
+      <div class="fee-options" id="fee-seniors">
+        <label class="fee-option active" id="fee-seniors-chip-0">
+          <input type="radio" name="feeTier" value="Member (£45)" checked onchange="updateFeeStyles('fee-seniors')">
+          <span class="lbl2">Stanmore Member</span><span class="amt">£45</span>
+        </label>
+        <label class="fee-option" id="fee-seniors-chip-1">
+          <input type="radio" name="feeTier" value="Guest (£60)" onchange="updateFeeStyles('fee-seniors')">
+          <span class="lbl2">Guest / Non-Member</span><span class="amt">£60</span>
+        </label>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="fs-title">Payment by Bank Transfer</div>
+      <div class="pay-box">
+        <div class="pay-row"><span class="k">Account Name</span><span class="v">Stanmore Golf Club</span></div>
+        <div class="pay-row"><span class="k">Sort Code</span><span class="v">00-00-00</span></div>
+        <div class="pay-row"><span class="k">Account Number</span><span class="v">00000000</span></div>
+      </div>
+      <div class="pay-ref">
+        <div class="k">Payment Reference — Please Use Exactly</div>
+        <div class="v" id="ref-seniors">SEN-[enter your name above]</div>
+      </div>
+      <p class="pay-note">Please transfer your entry fee within 7 days of submitting this form. Your place will be confirmed once payment is received and matched using the reference above.</p>
     </div>
     <div class="card-body">
       <div class="fs-title">Contact Details</div>
@@ -291,6 +332,7 @@ input:focus,textarea:focus{outline:none;border-color:rgba(212,160,23,.6);backgro
     <div class="ic">✅</div>
     <h2>You're entered!</h2>
     <p>Thanks for entering the Seniors Open. Confirmation will follow once your entry and payment have been checked by the club.</p>
+    <p class="success-ref" style="font-family:'DM Mono',monospace;font-size:.9rem;color:#f0c040;background:rgba(212,160,23,.1);border:1px solid rgba(212,160,23,.35);border-radius:10px;padding:10px 14px;display:inline-block;"></p>
     <button class="btn ghost" onclick="showPage('landing')">Back to Competitions</button>
   </div>
 </div>
@@ -301,7 +343,7 @@ input:focus,textarea:focus{outline:none;border-color:rgba(212,160,23,.6);backgro
     <div class="card-body">
       <div class="fs-title">Golfer Details</div>
       <label class="req">Full Name</label>
-      <input type="text" name="name" required>
+      <input type="text" name="name" required oninput="updateRef('junior', this.value)">
       <div class="row2">
         <div><label class="req">Home Club</label><input type="text" name="homeClub" required></div>
         <div><label class="req">CDH Number</label><input type="text" name="cdh" required></div>
@@ -327,6 +369,20 @@ input:focus,textarea:focus{outline:none;border-color:rgba(212,160,23,.6);backgro
       </div>
     </div>
     <div class="card-body">
+      <div class="fs-title">Payment by Bank Transfer</div>
+      <p style="font-size:.78rem;color:rgba(255,255,255,.55);margin-bottom:10px;">Entry fee: <strong style="color:#4cd98a;">£30</strong></p>
+      <div class="pay-box">
+        <div class="pay-row"><span class="k">Account Name</span><span class="v">Stanmore Golf Club</span></div>
+        <div class="pay-row"><span class="k">Sort Code</span><span class="v">00-00-00</span></div>
+        <div class="pay-row"><span class="k">Account Number</span><span class="v">00000000</span></div>
+      </div>
+      <div class="pay-ref">
+        <div class="k">Payment Reference — Please Use Exactly</div>
+        <div class="v" id="ref-junior">JUN-[enter golfer's name above]</div>
+      </div>
+      <p class="pay-note">Please transfer the entry fee within 7 days of submitting this form. The golfer's place will be confirmed once payment is received and matched using the reference above.</p>
+    </div>
+    <div class="card-body">
       <div class="fs-title">Dietary Requirements</div>
       <div class="diet-options" id="diet-junior"></div>
       <label>Further details (allergies etc.)</label>
@@ -346,6 +402,7 @@ input:focus,textarea:focus{outline:none;border-color:rgba(212,160,23,.6);backgro
     <div class="ic">✅</div>
     <h2>You're entered!</h2>
     <p>Thanks for entering the Junior Open. Confirmation will be sent to the parent/guardian once checked by the club.</p>
+    <p class="success-ref" style="font-family:'DM Mono',monospace;font-size:.9rem;color:#4cd98a;background:rgba(76,217,138,.1);border:1px solid rgba(76,217,138,.35);border-radius:10px;padding:10px 14px;display:inline-block;"></p>
     <button class="btn ghost" onclick="showPage('landing')">Back to Competitions</button>
   </div>
 </div>
@@ -389,9 +446,9 @@ input:focus,textarea:focus{outline:none;border-color:rgba(212,160,23,.6);backgro
 const DIET_CHOICES = ["None","Vegetarian","Vegan","Gluten-free","Allergy — see notes"];
 const COMPETITIONS = [
   { id:'seniors', name:'Seniors Open', tone:'gold', eyebrow:'Est. Tradition',
-    dateISO:'2027-05-19', dateLabel:'Wed 19 May 2027', elig:'50+', fee:'£35', entriesOpen:false },
+    dateISO:'2027-05-19', dateLabel:'Wed 19 May 2027', elig:'50+', fee:'£45 / £60', feeLabel:'Member / Guest', entriesOpen:false },
   { id:'junior', name:'Junior Open', tone:'emerald', eyebrow:'Future Stars',
-    dateISO:'2027-07-30', dateLabel:'Fri 30 July 2027', elig:'U18', fee:'£10', entriesOpen:false }
+    dateISO:'2027-07-30', dateLabel:'Fri 30 July 2027', elig:'U18', fee:'£30', entriesOpen:false }
 ];
 
 function daysUntil(iso){
@@ -416,7 +473,7 @@ function renderCompList(){
       </div>
       <div class="poster-stats">
         <div class="poster-stat"><div class="lbl">Eligibility</div><div class="val">${c.elig}</div></div>
-        <div class="poster-stat"><div class="lbl">Entry Fee</div><div class="val">${c.fee}</div></div>
+        <div class="poster-stat"><div class="lbl">${c.feeLabel || 'Entry Fee'}</div><div class="val">${c.fee}</div></div>
         <div class="poster-stat"><div class="lbl">Countdown</div><div class="val">${daysUntil(c.dateISO)}</div></div>
       </div>
       <div class="poster-cta">
@@ -459,6 +516,21 @@ function updateChipStyles(id){
   document.querySelectorAll('#'+id+' .diet-chip').forEach(chip=>{
     chip.classList.toggle('active', chip.querySelector('input').checked);
   });
+}
+function updateFeeStyles(id){
+  document.querySelectorAll('#'+id+' .fee-option').forEach(opt=>{
+    opt.classList.toggle('active', opt.querySelector('input').checked);
+  });
+}
+
+function makeRef(prefix, name){
+  const clean = (name||'').trim().split(/\s+/).pop() || '';
+  const surname = clean.replace(/[^a-zA-Z]/g,'').toUpperCase();
+  return surname ? prefix + '-' + surname : prefix + '-[enter your name above]';
+}
+function updateRef(comp, name){
+  const el = document.getElementById('ref-'+comp);
+  if(el) el.textContent = makeRef(comp==='seniors' ? 'SEN' : 'JUN', name);
 }
 renderDietChips('diet-seniors');
 renderDietChips('diet-junior');
@@ -553,6 +625,7 @@ async function submitEntry(evt, comp){
   const data = Object.fromEntries(new FormData(form).entries());
   data.competition = comp;
   data.competitionName = COMPETITIONS.find(c=>c.id===comp).name;
+  data.paymentRef = makeRef(comp==='seniors' ? 'SEN' : 'JUN', data.name);
   data.enteredAt = new Date().toISOString();
   data.paid = false;
   data.confirmed = false;
@@ -564,7 +637,10 @@ async function submitEntry(evt, comp){
     await window.storage.set('entry:'+data.id, JSON.stringify(data), true);
     await window.storage.set('entry-index', JSON.stringify(list), true);
     form.classList.add('hidden');
-    document.getElementById('success-'+comp).classList.remove('hidden');
+    const successBox = document.getElementById('success-'+comp);
+    const refNote = successBox.querySelector('.success-ref');
+    if(refNote) refNote.textContent = 'Your payment reference: ' + data.paymentRef;
+    successBox.classList.remove('hidden');
   }catch(err){
     showToast('Something went wrong — please try again');
     console.error(err);
@@ -631,6 +707,8 @@ async function renderAdminList(){
       <span class="badge ${e.competition}">${e.competitionName}</span>
       <div class="name" style="margin-top:6px;">${escapeHtml(e.name||'')}</div>
       <div class="meta-line">${escapeHtml(e.homeClub||'')} · CDH ${escapeHtml(e.cdh||'')} · HI ${escapeHtml(e.handicap||'')}</div>
+      ${e.feeTier ? `<div class="meta-line">💷 ${escapeHtml(e.feeTier)}</div>` : ''}
+      ${e.paymentRef ? `<div class="meta-line">🔖 Ref: ${escapeHtml(e.paymentRef)}</div>` : ''}
       <div class="meta-line">${escapeHtml(e.email||'—')} · ${escapeHtml(e.phone||'—')} · DOB ${e.dob||'—'}</div>
       ${e.parentEmail ? `<div class="meta-line">Parent: ${escapeHtml(e.parentEmail)} · ${escapeHtml(e.parentPhone||'')}</div>` : ''}
       <div class="meta-line">${escapeHtml(e.diet||'')}${e.dietNotes ? ' — '+escapeHtml(e.dietNotes) : ''}</div>
@@ -661,8 +739,8 @@ function escapeHtml(str){
 
 async function exportCSV(){
   const entries = await getAllEntries();
-  const headers = ['Competition','Name','Home Club','CDH','Handicap','Email','Phone','DOB','Parent Email','Parent Phone','Dietary','Dietary Notes','Entered At','Paid','Confirmed'];
-  const rows = entries.map(e=>[e.competitionName,e.name,e.homeClub,e.cdh,e.handicap,e.email,e.phone,e.dob,e.parentEmail||'',e.parentPhone||'',e.diet||'',e.dietNotes||'',e.enteredAt,e.paid?'Yes':'No',e.confirmed?'Yes':'No']);
+  const headers = ['Competition','Name','Fee Tier','Payment Ref','Home Club','CDH','Handicap','Email','Phone','DOB','Parent Email','Parent Phone','Dietary','Dietary Notes','Entered At','Paid','Confirmed'];
+  const rows = entries.map(e=>[e.competitionName,e.name,e.feeTier||'',e.paymentRef||'',e.homeClub,e.cdh,e.handicap,e.email,e.phone,e.dob,e.parentEmail||'',e.parentPhone||'',e.diet||'',e.dietNotes||'',e.enteredAt,e.paid?'Yes':'No',e.confirmed?'Yes':'No']);
   const csv = [headers,...rows].map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
   const blob = new Blob([csv],{type:'text/csv'});
   const url = URL.createObjectURL(blob);
