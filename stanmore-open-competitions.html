@@ -17,6 +17,8 @@
 :root{--navy:#1a3a6b;--navy-dk:#0f2347;--gold:#d4a017;--gold-lt:#f0c040;--grey:#8896a8;--green-lt:#4cd98a;--red:#ff9080;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{min-height:100%;font-family:'Poppins',sans-serif;color:#fff;overflow-x:hidden;background:linear-gradient(175deg,#060e1e 0%,#0f2347 18%,#1a3a6b 38%,#162d5c 55%,#1e4a8a 68%,#0f2347 82%,#060e1e 100%);background-attachment:fixed;}
+body{opacity:0;animation:pageFadeIn .4s ease-out .08s forwards;}
+@keyframes pageFadeIn{to{opacity:1;}}
 
 .nav-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;backdrop-filter:blur(4px);}
 .nav-overlay.open{display:block;}
